@@ -15,6 +15,8 @@ service ControllerService {
     rpc VolumeFrontendStart(VolumeFrontendStartRequest) returns (Volume);
     rpc VolumeFrontendShutdown(google.protobuf.Empty) returns (Volume);
     rpc VolumeUnmapMarkSnapChainRemovedSet(VolumeUnmapMarkSnapChainRemovedSetRequest) returns (Volume);
+    rpc VolumeMaximumSnapshotCountSet(VolumeMaximumSnapshotCountSetRequest) returns (Volume);
+    rpc VolumeMaximumTotalSnapshotSizeSet(VolumeMaximumTotalSnapshotSizeSetRequest) returns (Volume);
 
     rpc ReplicaList(google.protobuf.Empty) returns (ReplicaListReply);
     rpc ReplicaGet(ReplicaAddress) returns (ControllerReplica);
@@ -44,6 +46,8 @@ message Volume {
     string last_expansion_failed_at = 9;
 
     bool unmap_mark_snap_chain_removed = 10;
+    int32 maximum_snapshot_count = 11;
+    int64 maximum_total_snapshot_size = 12;
 }
 
 message ReplicaAddress {
@@ -91,6 +95,14 @@ message VolumeFrontendStartRequest {
 
 message VolumeUnmapMarkSnapChainRemovedSetRequest {
     bool enabled = 1;
+}
+
+message VolumeMaximumSnapshotCountSetRequest {
+    int32 count = 1;
+}
+
+message VolumeMaximumTotalSnapshotSizeSetRequest {
+    int64 size = 1;
 }
 
 message VolumePrepareRestoreRequest {

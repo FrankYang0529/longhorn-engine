@@ -95,6 +95,16 @@ class ReplicaServiceStub(object):
         request_serializer=replica__pb2.UnmapMarkDiskChainRemovedSetRequest.SerializeToString,
         response_deserializer=replica__pb2.UnmapMarkDiskChainRemovedSetResponse.FromString,
         )
+    self.MaximumSnapshotCountSet = channel.unary_unary(
+        '/ptypes.ReplicaService/MaximumSnapshotCountSet',
+        request_serializer=replica__pb2.MaximumSnapshotCountSetRequest.SerializeToString,
+        response_deserializer=replica__pb2.MaximumSnapshotCountSetResponse.FromString,
+        )
+    self.MaximumTotalSnapshotSizeSet = channel.unary_unary(
+        '/ptypes.ReplicaService/MaximumTotalSnapshotSizeSet',
+        request_serializer=replica__pb2.MaximumTotalSnapshotSizeSetRequest.SerializeToString,
+        response_deserializer=replica__pb2.MaximumTotalSnapshotSizeSetResponse.FromString,
+        )
 
 
 class ReplicaServiceServicer(object):
@@ -213,6 +223,20 @@ class ReplicaServiceServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def MaximumSnapshotCountSet(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def MaximumTotalSnapshotSizeSet(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_ReplicaServiceServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -295,6 +319,16 @@ def add_ReplicaServiceServicer_to_server(servicer, server):
           servicer.UnmapMarkDiskChainRemovedSet,
           request_deserializer=replica__pb2.UnmapMarkDiskChainRemovedSetRequest.FromString,
           response_serializer=replica__pb2.UnmapMarkDiskChainRemovedSetResponse.SerializeToString,
+      ),
+      'MaximumSnapshotCountSet': grpc.unary_unary_rpc_method_handler(
+          servicer.MaximumSnapshotCountSet,
+          request_deserializer=replica__pb2.MaximumSnapshotCountSetRequest.FromString,
+          response_serializer=replica__pb2.MaximumSnapshotCountSetResponse.SerializeToString,
+      ),
+      'MaximumTotalSnapshotSizeSet': grpc.unary_unary_rpc_method_handler(
+          servicer.MaximumTotalSnapshotSizeSet,
+          request_deserializer=replica__pb2.MaximumTotalSnapshotSizeSetRequest.FromString,
+          response_serializer=replica__pb2.MaximumTotalSnapshotSizeSetResponse.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

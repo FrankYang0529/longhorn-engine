@@ -60,6 +60,16 @@ class ControllerServiceStub(object):
         request_serializer=controller__pb2.VolumeUnmapMarkSnapChainRemovedSetRequest.SerializeToString,
         response_deserializer=controller__pb2.Volume.FromString,
         )
+    self.VolumeMaximumSnapshotCountSet = channel.unary_unary(
+        '/ptypes.ControllerService/VolumeMaximumSnapshotCountSet',
+        request_serializer=controller__pb2.VolumeMaximumSnapshotCountSetRequest.SerializeToString,
+        response_deserializer=controller__pb2.Volume.FromString,
+        )
+    self.VolumeMaximumTotalSnapshotSizeSet = channel.unary_unary(
+        '/ptypes.ControllerService/VolumeMaximumTotalSnapshotSizeSet',
+        request_serializer=controller__pb2.VolumeMaximumTotalSnapshotSizeSetRequest.SerializeToString,
+        response_deserializer=controller__pb2.Volume.FromString,
+        )
     self.ReplicaList = channel.unary_unary(
         '/ptypes.ControllerService/ReplicaList',
         request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
@@ -173,6 +183,20 @@ class ControllerServiceServicer(object):
     raise NotImplementedError('Method not implemented!')
 
   def VolumeUnmapMarkSnapChainRemovedSet(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def VolumeMaximumSnapshotCountSet(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def VolumeMaximumTotalSnapshotSizeSet(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -295,6 +319,16 @@ def add_ControllerServiceServicer_to_server(servicer, server):
       'VolumeUnmapMarkSnapChainRemovedSet': grpc.unary_unary_rpc_method_handler(
           servicer.VolumeUnmapMarkSnapChainRemovedSet,
           request_deserializer=controller__pb2.VolumeUnmapMarkSnapChainRemovedSetRequest.FromString,
+          response_serializer=controller__pb2.Volume.SerializeToString,
+      ),
+      'VolumeMaximumSnapshotCountSet': grpc.unary_unary_rpc_method_handler(
+          servicer.VolumeMaximumSnapshotCountSet,
+          request_deserializer=controller__pb2.VolumeMaximumSnapshotCountSetRequest.FromString,
+          response_serializer=controller__pb2.Volume.SerializeToString,
+      ),
+      'VolumeMaximumTotalSnapshotSizeSet': grpc.unary_unary_rpc_method_handler(
+          servicer.VolumeMaximumTotalSnapshotSizeSet,
+          request_deserializer=controller__pb2.VolumeMaximumTotalSnapshotSizeSetRequest.FromString,
           response_serializer=controller__pb2.Volume.SerializeToString,
       ),
       'ReplicaList': grpc.unary_unary_rpc_method_handler(
