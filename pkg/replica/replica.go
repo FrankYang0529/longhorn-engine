@@ -589,14 +589,9 @@ func (r *Replica) Chain() ([]string, error) {
 	return result, nil
 }
 
-func (r *Replica) GetRemainSnapshotSize() int64 {
+func (r *Replica) GetSnapshotSizeUsage() int64 {
 	r.RLock()
 	defer r.RUnlock()
-
-	// if maximumTotalSnapshotSize is 0, it means no limit. Return volume size.
-	if r.maximumTotalSnapshotSize == 0 {
-		return r.info.Size
-	}
 
 	var (
 		backingDiskName   string
@@ -613,7 +608,7 @@ func (r *Replica) GetRemainSnapshotSize() int64 {
 		}
 		totalSnapshotSize += r.getDiskSize(disk.Name)
 	}
-	return r.maximumTotalSnapshotSize - totalSnapshotSize
+	return totalSnapshotSize
 }
 
 func (r *Replica) writeVolumeMetaData(dirty, rebuilding bool) error {
@@ -1375,14 +1370,14 @@ func (r *Replica) ListDisks() map[string]DiskInfo {
 	return result
 }
 
-func (r *Replica) GetRemainSnapshotCounts() int {
+func (r *Replica) GetSnapshotCountUsage() int {
 	r.RLock()
 	defer r.RUnlock()
 
-	return r.getRemainSnapshotCounts()
+	return r.getSnapshotCountUsage()
 }
 
-func (r *Replica) getRemainSnapshotCounts() int {
+func (r *Replica) getSnapshotCountUsage() int {
 	var (
 		backingDiskName string
 		snapshotCount   int
@@ -1399,7 +1394,18 @@ func (r *Replica) getRemainSnapshotCounts() int {
 		}
 		snapshotCount++
 	}
-	return r.maximumSnapshotCount - snapshotCount
+	return snapshotCount
+}
+
+func (r *Replica) GetRemainSnapshotCounts() int {
+	r.RLock()
+	defer r.RUnlock()
+
+	return r.getRemainSnapshotCounts()
+}
+
+func (r *Replica) getRemainSnapshotCounts() int {
+	return r.maximumSnapshotCount - r.getSnapshotCountUsage()
 }
 
 func (r *Replica) getDiskSize(disk string) int64 {
