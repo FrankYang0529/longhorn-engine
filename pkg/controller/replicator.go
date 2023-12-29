@@ -383,6 +383,39 @@ func (r *replicator) RemainSnapshots() (int, error) {
 	return ret, nil
 }
 
+func (r *replicator) CanDoSnapshot() error {
+	// addReplica may call here even without any backend
+	if len(r.backends) == 0 {
+		return nil
+	}
+
+	retCount := math.MaxInt32
+	for _, backend := range r.backends {
+		if backend.mode == types.ERR {
+			continue
+		}
+		// ignore error and try next one. We can deal with all error situation later
+		remainCount, remainSize, err1 := backend.backend.RemainSnapshotCountAndSize()
+		headFileSize, err2 := backend.backend.GetHeadFileSize()
+		if err1 == nil && err2 == nil {
+			if remainCount < retCount {
+				retCount = remainCount
+			}
+			if remainSize < headFileSize {
+				return fmt.Errorf("snapshot remaining size is not enough")
+			}
+		}
+	}
+	if retCount == math.MaxInt32 {
+		return fmt.Errorf("cannot get valid result for remain snapshot")
+	}
+	if retCount <= 0 {
+		return fmt.Errorf("too many snapshots created")
+	}
+
+	return nil
+}
+
 func (r *replicator) SetRevisionCounter(address string, counter int64) error {
 	backend, ok := r.backends[address]
 	if !ok {
@@ -441,4 +474,34 @@ func (r *replicator) GetUnmapMarkSnapChainRemoved(address string) (bool, error) 
 	logrus.Infof("Got backend %s UnmapMarkSnapChainRemoved %v", address, enabled)
 
 	return enabled, nil
+}
+
+func (r *replicator) SetMaximumSnapshotCount(address string, count int) error {
+	backend, ok := r.backends[address]
+	if !ok {
+		return fmt.Errorf("cannot find backend %v", address)
+	}
+
+	if err := backend.backend.SetMaximumSnapshotCount(count); err != nil {
+		return err
+	}
+
+	logrus.Infof("Set backend %s MaximumSnapshotCount to %d", address, count)
+
+	return nil
+}
+
+func (r *replicator) SetMaximumTotalSnapshotSize(address string, size int64) error {
+	backend, ok := r.backends[address]
+	if !ok {
+		return fmt.Errorf("cannot find backend %v", address)
+	}
+
+	if err := backend.backend.SetMaximumTotalSnapshotSize(size); err != nil {
+		return err
+	}
+
+	logrus.Infof("Set backend %s MaximumTotalSnapshotSize to %d", address, size)
+
+	return nil
 }

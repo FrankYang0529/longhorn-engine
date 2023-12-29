@@ -89,6 +89,8 @@ func (cs *ControllerServer) getVolume() *ptypes.Volume {
 		LastExpansionError:        lastExpansionError,
 		LastExpansionFailedAt:     lastExpansionFailedAt,
 		UnmapMarkSnapChainRemoved: cs.c.GetUnmapMarkSnapChainRemoved(),
+		MaximumSnapshotCount:      int32(cs.c.GetMaximumSnapshotCount()),
+		MaximumTotalSnapshotSize:  cs.c.GetMaximumTotalSnapshotSize(),
 	}
 }
 
@@ -173,6 +175,22 @@ func (cs *ControllerServer) VolumeFrontendShutdown(ctx context.Context, req *emp
 
 func (cs *ControllerServer) VolumeUnmapMarkSnapChainRemovedSet(ctx context.Context, req *ptypes.VolumeUnmapMarkSnapChainRemovedSetRequest) (*ptypes.Volume, error) {
 	if err := cs.c.SetUnmapMarkSnapChainRemoved(req.Enabled); err != nil {
+		return nil, err
+	}
+
+	return cs.getVolume(), nil
+}
+
+func (cs *ControllerServer) VolumeMaximumSnapshotCountSet(ctx context.Context, req *ptypes.VolumeMaximumSnapshotCountSetRequest) (*ptypes.Volume, error) {
+	if err := cs.c.SetMaximumSnapshotCount(int(req.Count)); err != nil {
+		return nil, err
+	}
+
+	return cs.getVolume(), nil
+}
+
+func (cs *ControllerServer) VolumeMaximumTotalSnapshotSizeSet(ctx context.Context, req *ptypes.VolumeMaximumTotalSnapshotSizeSetRequest) (*ptypes.Volume, error) {
+	if err := cs.c.SetMaximumTotalSnapshotSize(req.Size); err != nil {
 		return nil, err
 	}
 

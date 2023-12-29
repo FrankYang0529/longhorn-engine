@@ -102,6 +102,9 @@ type Backend interface {
 	GetUnmapMarkSnapChainRemoved() (bool, error)
 	SetUnmapMarkSnapChainRemoved(enabled bool) error
 	ResetRebuild() error
+	SetMaximumSnapshotCount(count int) error
+	SetMaximumTotalSnapshotSize(size int64) error
+	RemainSnapshotCountAndSize() (int, int64, error)
 }
 
 type BackendFactory interface {

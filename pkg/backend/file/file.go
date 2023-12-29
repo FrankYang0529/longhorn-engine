@@ -104,6 +104,14 @@ func (f *Wrapper) RemainSnapshots() (int, error) {
 	return 1, nil
 }
 
+func (f *Wrapper) RemainSnapshotCountAndSize() (int, int64, error) {
+	size, err := f.Size()
+	if err != nil {
+		return 0, 0, err
+	}
+	return 1, size, nil
+}
+
 func (f *Wrapper) GetRevisionCounter() (int64, error) {
 	return 1, nil
 }
@@ -121,6 +129,14 @@ func (f *Wrapper) SetUnmapMarkSnapChainRemoved(enabled bool) error {
 }
 
 func (f *Wrapper) ResetRebuild() error {
+	return nil
+}
+
+func (f *Wrapper) SetMaximumSnapshotCount(count int) error {
+	return nil
+}
+
+func (f *Wrapper) SetMaximumTotalSnapshotSize(size int64) error {
 	return nil
 }
 

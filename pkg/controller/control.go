@@ -42,6 +42,8 @@ type Controller struct {
 	salvageRequested        bool
 
 	unmapMarkSnapChainRemoved bool
+	maximumSnapshotCount      int
+	maximumTotalSnapshotSize  int64
 
 	GRPCAddress string
 	GRPCServer  *grpc.Server
@@ -69,7 +71,7 @@ const (
 )
 
 func NewController(name string, factory types.BackendFactory, frontend types.Frontend, isUpgrade, disableRevCounter, salvageRequested, unmapMarkSnapChainRemoved bool,
-	iscsiTargetRequestTimeout, engineReplicaTimeout time.Duration, dataServerProtocol types.DataServerProtocol, fileSyncHTTPClientTimeout int) *Controller {
+	iscsiTargetRequestTimeout, engineReplicaTimeout time.Duration, dataServerProtocol types.DataServerProtocol, fileSyncHTTPClientTimeout, snapshotMaxCount int, snapshotMaxSize int64) *Controller {
 	c := &Controller{
 		factory:       factory,
 		VolumeName:    name,
@@ -81,6 +83,8 @@ func NewController(name string, factory types.BackendFactory, frontend types.Fro
 		revisionCounterDisabled:   disableRevCounter,
 		salvageRequested:          salvageRequested,
 		unmapMarkSnapChainRemoved: unmapMarkSnapChainRemoved,
+		maximumSnapshotCount:      snapshotMaxCount,
+		maximumTotalSnapshotSize:  snapshotMaxSize,
 
 		iscsiTargetRequestTimeout: iscsiTargetRequestTimeout,
 		engineReplicaTimeout:      engineReplicaTimeout,
@@ -201,7 +205,7 @@ func (c *Controller) Snapshot(name string, labels map[string]string) (string, er
 		name = lhutils.UUID()
 	}
 
-	if _, err := c.backend.RemainSnapshots(); err != nil {
+	if err := c.backend.CanDoSnapshot(); err != nil {
 		return "", err
 	}
 
@@ -243,7 +247,7 @@ func (c *Controller) Expand(size int64) error {
 		// Should block R/W during the expansion.
 		c.Lock()
 		defer c.Unlock()
-		if _, err := c.backend.RemainSnapshots(); err != nil {
+		if err := c.backend.CanDoSnapshot(); err != nil {
 			logrus.WithError(err).Error("Cannot get remain snapshot count before expansion")
 			return
 		}
@@ -349,7 +353,7 @@ func (c *Controller) addReplicaNoLock(newBackend types.Backend, address string, 
 		uuid := lhutils.UUID()
 		created := util.Now()
 
-		if _, err := c.backend.RemainSnapshots(); err != nil {
+		if err := c.backend.CanDoSnapshot(); err != nil {
 			return err
 		}
 
@@ -654,6 +658,78 @@ func (c *Controller) checkUnmapMarkSnapChainRemoved() error {
 	logrus.Infof("Controller checked and corrected flag unmapMarkSnapChainRemoved=%v for backend replicas", c.unmapMarkSnapChainRemoved)
 
 	return nil
+}
+
+func (c *Controller) SetMaximumSnapshotCount(count int) error {
+	c.Lock()
+	defer c.Unlock()
+
+	c.maximumSnapshotCount = count
+
+	allFailed := true
+	for _, r := range c.replicas {
+		// The related backend is nil if the mode is ERR
+		if r.Mode == types.ERR {
+			continue
+		}
+		err := c.backend.SetMaximumSnapshotCount(r.Address, count)
+		if err != nil {
+			logrus.Errorf("Failed to set flag MaximumSnapshotCount to %d in replica %s. Mark as ERR", count, r.Address)
+			c.setReplicaModeNoLock(r.Address, types.ERR)
+		} else {
+			allFailed = false
+		}
+	}
+
+	if allFailed {
+		return fmt.Errorf("failed to set flag maximumSnapshotCount=%d for all replicas", count)
+	}
+
+	logrus.Infof("Controller set flag maximumSnapshotCount=%d for backend replicas", count)
+
+	return nil
+}
+
+func (c *Controller) GetMaximumSnapshotCount() int {
+	c.RLock()
+	defer c.RUnlock()
+	return c.maximumSnapshotCount
+}
+
+func (c *Controller) SetMaximumTotalSnapshotSize(size int64) error {
+	c.Lock()
+	defer c.Unlock()
+
+	c.maximumTotalSnapshotSize = size
+
+	allFailed := true
+	for _, r := range c.replicas {
+		// The related backend is nil if the mode is ERR
+		if r.Mode == types.ERR {
+			continue
+		}
+		err := c.backend.SetMaximumTotalSnapshotSize(r.Address, size)
+		if err != nil {
+			logrus.Errorf("Failed to set flag MaximumTotalSnapshotSize to %d in replica %s. Mark as ERR", size, r.Address)
+			c.setReplicaModeNoLock(r.Address, types.ERR)
+		} else {
+			allFailed = false
+		}
+	}
+
+	if allFailed {
+		return fmt.Errorf("failed to set flag maximumTotalSnapshotSize=%d for all replicas", size)
+	}
+
+	logrus.Infof("Controller set flag maximumTotalSnapshotSize=%d for backend replicas", size)
+
+	return nil
+}
+
+func (c *Controller) GetMaximumTotalSnapshotSize() int64 {
+	c.RLock()
+	defer c.RUnlock()
+	return c.maximumTotalSnapshotSize
 }
 
 func isReplicaInInvalidState(state string) bool {
